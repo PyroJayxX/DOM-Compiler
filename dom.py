@@ -182,13 +182,15 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == ';':
+                tokens.append(Token(TT_EOF, pos_start=self.pos))
+                self.advance()
             else: 
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
                 return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
             
-        tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, None
                 
 
@@ -319,7 +321,7 @@ class Parser:
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected '+', '-', '*' or '/'"
+                "Missing semicolon ';' at the end of the line"
             ))
         return res
 
