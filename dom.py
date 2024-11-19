@@ -16,6 +16,35 @@ NUMERIC = ZERO + DIGIT
 ALPHA_NUMERIC = ALPHA + NUMERIC
 PUNCTUATION_SYMBOLS = '!@#$%^&*()-_=+[]{|};:’”,<>./?'
 ASCII = ALPHA_NUMERIC + PUNCTUATION_SYMBOLS
+ARITH_OP = '+-*/%'
+
+delim_map = {
+    'adr_delim': set(ALPHA_NUMERIC + ' '),
+    'arith_delim':  set(ALPHA_NUMERIC + ' ' + '-' + '('),
+    'assign_delim': set(ALPHA_NUMERIC + ' ' + '"' + '-' + '(' + '['),
+    'bool_delim':   {')', ']', ',', ' '},
+    'codeblk_delim': {'{', ' '},
+    'comp_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '-' + ' '),
+    'clsbrace_delim': set(ALPHA_NUMERIC + '}' + '\n' + ' '),
+    'clsparen_delim': {'+', '-', '*', '/', '%', ')', '{', '}', ',', ']', '\n', ' '},
+    'clssquare_delim': {'+', '-', '*', '/', '%', '!', '=', '<', '>', ')', ',', '[', ']', '\n', ' '},
+    'comma_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '[' + '-' + ' '),
+    'comp_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '-' + ' '),
+    'ident_delim': {'+', '-', '*', '/', '%', '!', '=', '<', '>', '(', ')', ',', '[', ']', '\n', ' '},
+    'incdec_delim': set(ALPHA_NUMERIC + ')', ' '),
+    'kword_delim': {' '},
+    'lend_delim': set(ALPHA_NUMERIC + '#' + '#$' + '\n' + ' '),
+    'minus_delim': set(ALPHA_NUMERIC + '-' + '(' + ' '),
+    'num_delim': set(ARITH_OP + ' ' + ')' + ',' + ';'),
+    'opnbrace_delim': set(ALPHA_NUMERIC + '\n' + '"' + ' '),
+    'opnparen_delim': set(ALPHA_NUMERIC + '"', "'", '-', '(', ')', '\n', ' '),
+    'opnsquare_delim': set(ALPHA_NUMERIC + '"', "'", '-', '(', '[', ']', ' '),
+    'plus_delim': set(ALPHA_NUMERIC + '"', "'", '-', '('),
+    'para_delim': {'(', ' ', '\n'},
+    'recall_delim': set(ALPHA + ' ' + ';'), 
+    'str_delim': {'+', ')', ']', '\n', ',', ' '},
+    'woogie_delim': set(NUMERIC + '(' + ' ')
+}
 
 first_set_map = {
     'fs_program':           {'expansion', '#', '#$'},
