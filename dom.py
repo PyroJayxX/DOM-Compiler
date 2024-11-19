@@ -16,6 +16,58 @@ NUMERIC = ZERO + DIGIT
 ALPHA_NUMERIC = ALPHA + NUMERIC
 PUNCTUATION_SYMBOLS = '!@#$%^&*()-_=+[]{|};:’”,<>./?'
 ASCII = ALPHA_NUMERIC + PUNCTUATION_SYMBOLS
+ARITH_OP = '+-*/%'
+
+delim_map = {
+    'adr_delim': set(ALPHA_NUMERIC + ' '),
+    'arith_delim':  set(ALPHA_NUMERIC + ' ' + '-' + '('),
+    'assign_delim': set(ALPHA_NUMERIC + ' ' + '"' + '-' + '(' + '['),
+    'bool_delim':   {')', ']', ',', ' '},
+    'codeblk_delim': {'{', ' '},
+    'comp_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '-' + ' '),
+    'clsbrace_delim': set(ALPHA_NUMERIC + '}' + '\n' + ' '),
+    'clsparen_delim': {'+', '-', '*', '/', '%', ')', '{', '}', ',', ']', '\n', ' '},
+    'clssquare_delim': {'+', '-', '*', '/', '%', '!', '=', '<', '>', ')', ',', '[', ']', '\n', ' '},
+    'comma_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '[' + '-' + ' '),
+    'comp_delim': set(ALPHA_NUMERIC + '"' + "'" + '(' + '-' + ' '),
+    'ident_delim': {'+', '-', '*', '/', '%', '!', '=', '<', '>', '(', ')', ',', '[', ']', '\n', ' '},
+    'incdec_delim': set(ALPHA_NUMERIC + ')', ' '),
+    'kword_delim': {' '},
+    'lend_delim': set(ALPHA_NUMERIC + '#' + '#$' + '\n' + ' '),
+    'minus_delim': set(ALPHA_NUMERIC + '-' + '(' + ' '),
+    'num_delim': set(ARITH_OP + ' ' + ')' + ',' + ';'),
+    'opnbrace_delim': set(ALPHA_NUMERIC + '\n' + '"' + ' '),
+    'opnparen_delim': set(ALPHA_NUMERIC + '"', "'", '-', '(', ')', '\n', ' '),
+    'opnsquare_delim': set(ALPHA_NUMERIC + '"', "'", '-', '(', '[', ']', ' '),
+    'plus_delim': set(ALPHA_NUMERIC + '"', "'", '-', '('),
+    'para_delim': {'(', ' ', '\n'},
+    'recall_delim': set(ALPHA + ' ' + ';'), 
+    'str_delim': {'+', ')', ']', '\n', ',', ' '},
+    'woogie_delim': set(NUMERIC + '(' + ' ')
+}
+
+first_set_map = {
+    'fs_program':           {'expansion', '#', '#$'},
+    'fs_global_dec':        {'int', 'string', 'float', 'bool', 'curse', 'restrict', '#', '#$', None}, # + id
+    'fs_body':              {'int', 'string', 'float', 'bool', 'curse', 'restrict', 'invoke', 'cycle', 'vow', 'while', '#', '#$', None}, # +id
+    'fs_local_dec':         {'int', 'string', 'float', 'bool', 'curse', 'restrict', '#', '#$', None}, # + id
+    'fs_var_dec':           {'int', 'string', 'float', 'bool', 'restrict'},
+    'fs_clan_dec':          {'int', 'string', 'float'},
+    'fs_curse_dec':         {'curse'},
+    'fs_invoke_stm':        {'invoke'},
+    'fs_capture_stm':       {'capture'},
+    'fs_conditional_stm':   {'vow'},
+    'fs_boogie_woogie_stm': {'boogie'},
+    'fs_cycle_loop':        {'cycle'},
+    'fs_sustain_loop':      {'sustain'},
+    'fs_persustain_loop':   {'perform'},
+    'fs_unary_expr':        {'++', '--', '!'},
+    'fs_arith_expr':        {'('},
+    'fs_relational_expr':   {'len', '('},
+    'fs_length':            {'len'},
+    'fs_cleave':            {'cleave'},
+    'fs_dismantle':         {'dismantle'}
+    }
 
 ##############
 # ERRORS
@@ -546,6 +598,87 @@ class Parser:
         ))
 
         return res.success(node)
+
+    def program(self): # this is where the program starts, it should always parse 'expansion' first
+        pass
+
+    def global_dec(self): # this is for declarations outside functions; can be null
+        # check for <global_choice> such as var_dec, curse_dec, clan_dec, and restrict_dec
+        pass
+
+    def body(self): # this is where statements are written, it should always end with ';', can be null
+        # check for <statements> such as local dec, re-assign, expressions, comments, invoke(print), 
+        # capture(scan), curse_call(function calls) conditional_stm, looping_stm; can be null
+        pass
+
+    def local_dec(self): # this is for declarations inside functions; can be null
+        # check for <local_choice> such as var_dec, curse_dec, clan_dec, and restrict_dec
+        pass
+
+    def var_dec(self): # this is for parsing variable declaration, eg. int a = 1; , int a;
+        # check for restrict(constant) keyword; can be null
+        pass
+
+    def clan_dec(self): # this is for parsing clan declarations, eg. int num[3] = {1,2,3,4}; int num[] = {1,2}; int num[5]; can be null
+        pass
+
+    def curse_dec(self): # this is for parsing curses (functions), eg. curse funcName(<param1, param2>){<body>}; can be null
+        # check for parameters, recall statements
+        pass
+
+    def invoke_stm(self): # print statements
+        pass
+
+    def var_arith(self): # variable arithmetic eg. a+b
+        pass
+
+    def capture_stm(self):  # scan statements
+        pass
+
+    def conditional_stm(self): # vow-else(if-else) statements
+        pass
+
+    def boogie_woogie_stm(self): # boogie-woogie(switch-case) statements
+        pass
+
+    def boogie_true_stm(self): # boogie-true(switch-true) statements
+        pass
+
+    def cycle_loop(self): # for loop
+        pass
+
+    def sustain_loop(self): # while loop
+        pass
+
+    def persustain_loop(self): # do-while loop
+        pass
+
+    def unary_expr(self): # for unary_expressions eg. !varName, ++varName, varName--
+        pass
+
+    def arith_expr(self): # for arithmetic expressions eg. 1+1
+        pass
+
+    def relational_expr(self): # for logical expressions eg. '!', '&&', '||'
+        pass
+
+    def curse_call(self): # for calling curses(functions) eg. intSum = add(a, b);
+        pass
+
+    def length(self): # built-in function for strings and clans(arrays)
+        pass
+    
+    def cleave(self): # built-in function for clans(arrays)
+        pass
+
+    def cleave_string(self): # built-in function for strings
+        pass
+
+    def dismantle(self): # built-in function for clans(arrays)
+        pass
+
+    def dismantle_string(self):  # built-in function for strings
+        pass
 
 
 #######################
