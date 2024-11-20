@@ -22,10 +22,11 @@ def process_input():
     error_output.delete("1.0", "end")  # Clear previous errors
     if error:
         error_output.insert("1.0", error.as_string())
-
+    
 app = ctk.CTk()
 app.title("DOM Compiler GUI")
 app.geometry("800x850")
+app.resizable(False, False)
 
 input_label = ctk.CTkLabel(app, text="Input Code:", font=("Arial", 16))
 input_label.pack(pady=(20, 5))
@@ -33,7 +34,7 @@ input_label.pack(pady=(20, 5))
 input_text = ctk.CTkTextbox(app, width=750, height=350, font=("Courier", 20))
 input_text.pack(pady=10)
 
-process_button = ctk.CTkButton(app, text="Process Input", command=process_input)
+process_button = ctk.CTkButton(app, text="Tokenize Input", command=process_input)
 process_button.pack(pady=10)
 
 tokens_label = ctk.CTkLabel(app, text="Tokens:", font=("Arial", 16))

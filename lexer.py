@@ -293,6 +293,19 @@ class Lexer:
                 tok, error = self.make_string()
                 if error: return [], error
                 tokens.append(tok)
+            elif self.current_char == '#':
+                pos_start = self.pos.copy()
+                self.advance()
+                if self.current_char == '$':
+                    self.advance()
+                    while self.current_char in ASCII + ' ' + '\t' + '\n':
+                        self.advance()
+                        if self.current_char == '$':
+                            self.advance()
+                            if self.current_char == '#':
+                                break
+                while self.current_char != None and self.current_char in ASCII + ' \t':
+                    self.advance()
             elif self.current_char in ' \t\n':  
                 self.advance()
             elif self.current_char == '[':
