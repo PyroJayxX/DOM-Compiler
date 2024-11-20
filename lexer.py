@@ -206,7 +206,7 @@ TT_SEMICOL  = 'SEMICOL' # ';'
 TT_COL      = 'COLON'   # ':'
 TT_COMMA    = 'COMMA'   # ','
 
-TT_EOF      = 'EOF'     # End of Line
+TT_EOF      = 'EOF'     # End of File
 
 TT_KEYWORD  = 'KEYWORD' # Keywords
 TT_IDENTIFIER = 'IDENTIFIER' # Identifiers
@@ -293,6 +293,8 @@ class Lexer:
                 tok, error = self.make_string()
                 if error: return [], error
                 tokens.append(tok)
+            elif self.current_char in ' \t\n':  
+                self.advance()
             elif self.current_char == '[':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
@@ -327,7 +329,7 @@ class Lexer:
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_RBRACE, pos_start=self.pos))
                 self.advance()
-                if self.current_char not in delim_map['clsbrace_delim']:
+                if self.current_char != None and self.current_char not in delim_map['clsbrace_delim']:
                         return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces")
             elif self.current_char == ',':
                 pos_start = self.pos.copy()
