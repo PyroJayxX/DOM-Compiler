@@ -12,7 +12,7 @@ def process_input():
         return
     
     # Run lexer
-    tokens, error = lexer.run('<stdin>', text)
+    tokens, errors = lexer.run('<stdin>', text)
 
     # Update tokens output
     tokens_output.delete("1.0", "end")  # Clear previous tokens
@@ -22,8 +22,22 @@ def process_input():
 
     # Update error output
     error_output.delete("1.0", "end")  # Clear previous errors
-    if error:
-        error_output.insert("1.0", error.as_string())
+    if errors:
+        error_output.insert("1.0", '\n'.join(error.as_string() for error in errors))
+    
+    # Adjust scrollbar visibility
+    adjust_scrollbar_visibility()
+
+def adjust_scrollbar_visibility():
+    error_output.update_idletasks()
+    text_width = error_output.bbox("end")[0] if error_output.bbox("end") else 0
+    widget_width = error_output.winfo_width()
+    
+    # Show or hide the scrollbar based on content width
+    if text_width > widget_width:
+        error_scrollbar.grid()  # Show scrollbar
+    else:
+        error_scrollbar.grid_remove()  # Hide scrollbar
 
 # Create the main app window
 app = ctk.CTk()
@@ -52,8 +66,17 @@ tokens_output.grid(row=1, rowspan=5, column=1, padx=20, pady=0, sticky="n")
 error_label = ctk.CTkLabel(app, text="Errors:", font=("Arial", 16))
 error_label.grid(row=3, column=0, padx=5, pady=5, sticky="n")
 
-error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Courier", 14), state="normal")
+# Error textbox with horizontal scrollbar
+error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Courier", 14), state="normal", wrap="none")
 error_output.grid(row=4, column=0, padx=20, pady=0, sticky="s")
+
+# Add horizontal scrollbar for errors
+error_scrollbar = ctk.CTkScrollbar(app, orientation="horizontal", command=error_output.xview)
+error_scrollbar.grid(row=5, column=0, sticky="ew", padx=20)
+error_output.configure(xscrollcommand=error_scrollbar.set)
+
+# Initially hide the scrollbar
+adjust_scrollbar_visibility()
 
 # Column and row configurations
 app.grid_columnconfigure(0, weight=1)  # Input column

@@ -107,13 +107,13 @@ class Error:
 
     def as_string(self):
         result = f'{self.error_name}: {self.details}'
-        result += f' File: {self.pos_start.fn}, line {self.pos_start.ln + 1}'
-        result += '\n\n' + string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end)
+        result += f'\nFile: {self.pos_start.fn}, line {self.pos_start.ln + 1}\n'
+        result += string_with_arrows(self.pos_start.ftxt, self.pos_start, self.pos_end) + '\n'
         return result
 
-class IllegalCharError(Error):
+class LexicalError(Error):
     def __init__(self, pos_start, pos_end, details):
-        super().__init__(pos_start, pos_end, 'Illegal Character', details)
+        super().__init__(pos_start, pos_end, 'Lexical Error', details)
 
 class InvalidSyntaxError(Error):
     def __init__(self, pos_start, pos_end, details=''):
@@ -171,7 +171,7 @@ class Position:
 
 TT_INT      = 'INT'     # Whole Numbers '3'
 TT_FLOAT    = 'FLOAT'   # Decimal Numbers '3.14'
-TT_STRING   = 'STRING'  # String 
+TT_STRING   = 'STRING'  # Strings 
 
 TT_PLUS     = 'PLUS'    # '+'
 TT_MINUS    = 'MINUS'   # '-'
@@ -237,6 +237,7 @@ class Lexer:
         self.text = text
         self.pos = Position(-1, 0, -1, fn, text)
         self.current_char = None
+        self.errors = []
         self.advance()
 
     def advance(self):
@@ -251,47 +252,47 @@ class Lexer:
                 self.advance()
             elif self.current_char in NUMERIC:
                 tok, error = self.make_number()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char in ALPHA:
                 tok, error = self.make_identifier()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '+':
                 tok, error = self.make_plus_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '-':
                 tok, error = self.make_minus_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '*':
                 tok, error = self.make_mul_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '/':
                 tok, error = self.make_div_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '!':
                 tok, error = self.make_not_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '=':
                 tok, error = self.make_equals()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '<':
                 tok, error = self.make_less_than()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '>':
                 tok, error = self.make_greater_than()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '"':
                 tok, error = self.make_string()
-                if error: return [], error
+                if error: self.errors.append(error)
                 tokens.append(tok)
             elif self.current_char == '#':
                 pos_start = self.pos.copy()
@@ -313,43 +314,50 @@ class Lexer:
                 tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['opnsquare_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets"))
+                        self.advance()
             elif self.current_char == ']':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['clssquare_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets"))
+                        self.advance()
             elif self.current_char == '(':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_LPAREN, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['opnparen_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses"))
+                        self.advance()
             elif self.current_char == ')':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['clsparen_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses"))
+                        self.advance()
             elif self.current_char == '{':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_LBRACE, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['opnbrace_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces"))
+                        self.advance()
             elif self.current_char == '}':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_RBRACE, pos_start=self.pos))
                 self.advance()
                 if self.current_char != None and self.current_char not in delim_map['clsbrace_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces"))
+                        self.advance()
             elif self.current_char == ',':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_COMMA, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['comma_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after comma")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after comma"))
+                        self.advance()
             elif self.current_char == ';':
                 pos_start = self.pos.copy()
                 tokens.append(Token(TT_SEMICOL, pos_start=self.pos)) # WALA PANG DELIMITER SEMICOL
@@ -364,49 +372,61 @@ class Lexer:
                 if self.current_char == '&':
                     self.advance()
                     if self.current_char not in delim_map['assign_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                        self.advance()
                     tokens.append(Token(TT_AND, pos_start=self.pos))
-                else: return [], InvalidSyntaxError(pos_start, self.pos, "'&' is not a valid operator")
+                else: 
+                    self.errors.append(InvalidSyntaxError(pos_start, self.pos, "'&' is not a valid operator"))
+                    self.advance()
             elif self.current_char == '|':
                 pos_start = self.pos.copy()
                 self.advance()
                 if self.current_char == '|':
                     self.advance()
                     if self.current_char not in delim_map['assign_delim']:
-                        return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                        self.advance()
                     tokens.append(Token(TT_OR, pos_start=self.pos))
-                else: return [], InvalidSyntaxError(pos_start, self.pos, "'|' is not a valid operator")
+                else: self.errors.append(InvalidSyntaxError(pos_start, self.pos, "'|' is not a valid operator"))
             else: 
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                return [], IllegalCharError(pos_start, self.pos, f"'{char}'")
+                self.errors.append(LexicalError(pos_start, self.pos, f"'{char}'"))
         
         tokens.append(Token(TT_EOF, pos_start=self.pos))
-        return tokens, None
+        return tokens, self.errors
                 
 
-    def make_number(self):
+    def make_number(self): # for making numbers: int and float
         num_str = ''
         dot_count = 0
         pos_start = self.pos.copy()
 
         while self.current_char != None and self.current_char in NUMERIC + '.':
             if self.current_char == '.':
-                if dot_count == 1: break
+                self.advance()
+                if self.current_char == '.':
+                    pos_end = self.pos.copy()
+                    return [], LexicalError(pos_start, pos_end, f"Multiple period '.' in a float assignment")
+                elif self.current_char == None or self.current_char not in NUMERIC:
+                    pos_end = self.pos.copy()  
+                    return [], LexicalError(pos_start, pos_end, "Incomplete float assignment")
                 dot_count += 1
                 num_str += '.'
-            else: 
+            else:
                 num_str += self.current_char
-            self.advance()
-        
+                self.advance()
+
         if self.current_char not in delim_map['num_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after number")
-            
+            pos_end = self.pos.copy()
+            return [], LexicalError(pos_start, pos_end, f"Invalid delimiter '{self.current_char}' after number")
+
         if dot_count == 0:
             return Token(TT_INT, int(num_str), pos_start, self.pos), None
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos), None
+
 
     def make_identifier(self): # For making identifiers/keywords
         id_str = ''
@@ -420,7 +440,7 @@ class Lexer:
 
         if tok_type == TT_IDENTIFIER:
              if self.current_char not in delim_map['ident_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier")
         elif tok_type == TT_KEYWORD:
             delim_type = keyword_delim_map[id_str]
             if isinstance(delim_type, list):  # if it's a list of delimiters from delim map
@@ -429,28 +449,33 @@ class Lexer:
                 valid_delims = delim_map.get(delim_type)
 
             if self.current_char not in valid_delims:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{id_str}'")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{id_str}'")
 
         return Token(tok_type, id_str, pos_start, self.pos), None
     
-    def make_string(self):
+    def make_string(self): # for making strings
         id_str = ''
-        pos_start = self.pos.copy()
+        pos_start = self.pos.copy() 
         self.advance()
 
-        while self.current_char != None and self.current_char in ASCII + ' ':
+        while self.current_char != None and self.current_char in ASCII + ' ' and self.current_char != '\\':
             if self.current_char == '"':
                 # Closing quote found, break out of the loop
                 self.advance() 
                 if self.current_char not in delim_map['str_delim']:
-                    return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after string '{id_str}'")
-                return Token(TT_STRING, id_str, pos_start, self.pos), None
+                    pos_end = self.pos.copy()  
+                    return [], LexicalError(pos_start, pos_end, f"Invalid delimiter '{self.current_char}' after string '{id_str}'")
+                else:
+                    return Token(TT_STRING, id_str, pos_start, self.pos), None
+            
             id_str += self.current_char
             self.advance()
 
-        return None, InvalidSyntaxError(pos_start, self.pos, 'String not properly closed with double quotes (")')
+        pos_end = self.pos.copy()
+        return None, InvalidSyntaxError(pos_start, pos_end, 'String not properly closed with double quotes (")')
+
     
-    def make_plus_equals(self):
+    def make_plus_equals(self): # for =, +=, ==
         tok_type = TT_PLUS
         pos_start = self.pos.copy()
         self.advance()
@@ -460,11 +485,11 @@ class Lexer:
             tok_type = TT_PLUSEQ
 
         if self.current_char not in delim_map['assign_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
-    def make_minus_equals(self):
+    def make_minus_equals(self): # for -, -=, --
         tok_type = TT_MINUS
         pos_start = self.pos.copy()
         self.advance()
@@ -474,7 +499,7 @@ class Lexer:
             tok_type = TT_MINUSEQ
         
         if self.current_char not in delim_map['assign_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
@@ -487,13 +512,13 @@ class Lexer:
             self.advance()
             tok_type = TT_MULEQ
             if self.current_char not in delim_map['assign_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         if self.current_char == '*':
             self.advance()
             tok_type = TT_POW
             if self.current_char not in delim_map['arith_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
@@ -506,10 +531,10 @@ class Lexer:
             self.advance()
             tok_type = TT_DIVEQ
             if self.current_char not in delim_map['comp_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         if self.current_char not in delim_map['assign_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
@@ -522,10 +547,10 @@ class Lexer:
             self.advance()
             tok_type = TT_NE
             if self.current_char not in delim_map['comp_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         if self.current_char not in delim_map['assign_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
     
@@ -538,10 +563,10 @@ class Lexer:
             self.advance()
             tok_type = TT_EQ
             if self.current_char not in delim_map['comp_delim']:
-                return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         if self.current_char not in delim_map['assign_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
     
@@ -555,7 +580,7 @@ class Lexer:
             tok_type = TT_LTE
 
         if self.current_char not in delim_map['comp_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
@@ -569,7 +594,7 @@ class Lexer:
             tok_type = TT_GTE
         
         if self.current_char not in delim_map['comp_delim']:
-            return [], IllegalCharError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+            return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
         
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
     
