@@ -15,29 +15,19 @@ def process_input():
     tokens, errors = lexer.run('<stdin>', text)
 
     # Update tokens output
+    tokens_output.configure(state="normal")  # Enable editing temporarily
     tokens_output.delete("1.0", "end")  # Clear previous tokens
     if tokens:
         numbered_tokens = [f"{i + 1}:  {token}" for i, token in enumerate(tokens)]  # Add line numbers
         tokens_output.insert("1.0", '\n'.join(numbered_tokens))
+    tokens_output.configure(state="disabled")  # Disable editing after update
 
     # Update error output
+    error_output.configure(state="normal")  # Enable editing temporarily
     error_output.delete("1.0", "end")  # Clear previous errors
     if errors:
         error_output.insert("1.0", '\n'.join(error.as_string() for error in errors))
-    
-    # Adjust scrollbar visibility
-    adjust_scrollbar_visibility()
-
-def adjust_scrollbar_visibility():
-    error_output.update_idletasks()
-    text_width = error_output.bbox("end")[0] if error_output.bbox("end") else 0
-    widget_width = error_output.winfo_width()
-    
-    # Show or hide the scrollbar based on content width
-    if text_width > widget_width:
-        error_scrollbar.grid()  # Show scrollbar
-    else:
-        error_scrollbar.grid_remove()  # Hide scrollbar
+    error_output.configure(state="disabled")  # Disable editing after update
 
 # Create the main app window
 app = ctk.CTk()
@@ -49,7 +39,8 @@ app.resizable(False, False)
 input_label = ctk.CTkLabel(app, text="Input Code:", font=("Arial", 16))
 input_label.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-input_text = ctk.CTkTextbox(app, width=600, height=280, font=("Courier", 14))
+# Input Text widget without scrollbars and no wrapping
+input_text = ctk.CTkTextbox(app, width=600, height=280, font=("Courier", 14), wrap="none")
 input_text.grid(row=1, column=0, padx=20, pady=0, sticky="n")
 
 process_button = ctk.CTkButton(app, text="Tokenize Input", command=process_input, width=390)
@@ -59,24 +50,16 @@ process_button.grid(row=2, column=0, padx=10, pady=10, sticky="n")
 tokens_label = ctk.CTkLabel(app, text="Tokens:", font=("Arial", 16))
 tokens_label.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-tokens_output = ctk.CTkTextbox(app, width=230, height=485, font=("Courier", 14), state="normal")
+tokens_output = ctk.CTkTextbox(app, width=230, height=485, font=("Courier", 14), state="disabled", wrap="none")  # Set to disabled initially
 tokens_output.grid(row=1, rowspan=5, column=1, padx=20, pady=0, sticky="n")
 
 # Error section (below input text)
 error_label = ctk.CTkLabel(app, text="Errors:", font=("Arial", 16))
 error_label.grid(row=3, column=0, padx=5, pady=5, sticky="n")
 
-# Error textbox with horizontal scrollbar
-error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Courier", 14), state="normal", wrap="none")
+# Error textbox without scrollbars and no wrapping
+error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Courier", 14), state="disabled", wrap="none")  # Set to disabled initially
 error_output.grid(row=4, column=0, padx=20, pady=0, sticky="s")
-
-# Add horizontal scrollbar for errors
-error_scrollbar = ctk.CTkScrollbar(app, orientation="horizontal", command=error_output.xview)
-error_scrollbar.grid(row=5, column=0, sticky="ew", padx=20)
-error_output.configure(xscrollcommand=error_scrollbar.set)
-
-# Initially hide the scrollbar
-adjust_scrollbar_visibility()
 
 # Column and row configurations
 app.grid_columnconfigure(0, weight=1)  # Input column

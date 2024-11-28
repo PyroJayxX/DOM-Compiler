@@ -15,7 +15,7 @@ DIGIT = '123456789'
 NUMERIC = ZERO + DIGIT
 ALPHA_NUMERIC = ALPHA + NUMERIC
 PUNCTUATION_SYMBOLS = string.punctuation
-ASCII = ALPHA_NUMERIC + PUNCTUATION_SYMBOLS + ' '
+ASCII = ALPHA_NUMERIC + PUNCTUATION_SYMBOLS + ' \t\n'
 ARITH_OP = '+-*/%'
 
 delim_map = {
@@ -458,7 +458,7 @@ class Lexer:
         pos_start = self.pos.copy() 
         self.advance()
 
-        while self.current_char != None and self.current_char in ASCII + ' ' and self.current_char != '\\':
+        while self.current_char != None and self.current_char in ASCII and self.current_char != '\\':
             if self.current_char == '"':
                 # Closing quote found, break out of the loop
                 self.advance() 
