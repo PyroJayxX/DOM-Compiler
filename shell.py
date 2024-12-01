@@ -35,6 +35,12 @@ app.title("DOM Compiler GUI")
 app.geometry("700x545")  # Adjust width to fit the tokens area comfortably
 app.resizable(False, False)
 
+# Change the window icon
+try:
+    app.iconbitmap("dom_logo.ico")  # Replace with your .ico file path
+except Exception as e:
+    print(f"Could not set icon: {e}")
+
 # Input section
 input_label = ctk.CTkLabel(app, text="Input Code:", font=("Arial", 16))
 input_label.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
