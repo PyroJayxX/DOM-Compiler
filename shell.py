@@ -39,7 +39,7 @@ def process_input():
             start_index = end_index  # Move to the next character after the keyword
 
     # Define the tag for magenta color (keyword highlight)
-    input_text.tag_config("purple", foreground="#FF00FF")
+    input_text.tag_config("purple", foreground="#f396d3")
 
     # Highlight single-line comments starting with '#'
     start_index = "1.0"
@@ -66,7 +66,7 @@ def process_input():
         start_index = end_index
 
     # Define the tag for green color (comment highlight)
-    input_text.tag_config("comment", foreground="#00FF00")
+    input_text.tag_config("comment", foreground="#999999")
 
     # Run lexer
     tokens, errors = lexer.run('<stdin>', text)
@@ -88,7 +88,7 @@ def process_input():
 
 # Create the main app window
 app = ctk.CTk()
-app.title("DOM Compiler GUI")
+app.title("DOM Compiler")
 app.geometry("700x545")  # Adjust width to fit the tokens area comfortably
 app.resizable(False, False)
 
@@ -124,7 +124,7 @@ error_label = ctk.CTkLabel(app, text="Errors:", font=("Arial", 16))
 error_label.grid(row=3, column=0, padx=5, pady=5, sticky="n")
 
 # Error textbox without scrollbars and no wrapping
-error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Verdana", 14), state="disabled", wrap="none")  # Set to disabled initially
+error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Consolas", 14), state="disabled", wrap="none")  # Set to disabled initially
 error_output.grid(row=4, column=0, padx=20, pady=0, sticky="s")
 
 # Column and row configurations

@@ -161,6 +161,8 @@ class Position:
         if current_char == '\n':
             self.ln += 1
             self.col = 0
+            
+        return self
     
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
@@ -392,7 +394,7 @@ class Lexer:
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                self.errors.append(LexicalError(pos_start, self.pos, f"'{char}'"))
+                self.errors.append(LexicalError(pos_start, self.pos, f"Invalid Character '{char}'"))
         
         tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, self.errors
