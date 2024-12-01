@@ -5,12 +5,69 @@ import lexer
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
+# List of keywords
+keywords = [
+    "domain", "expansion", "null", "int", "float", "string", "bool", 
+    "restrict", "invoke", "capture", "true", "false", 
+    "vow", "else vow", "else", "boogie", "woogie", 
+    "default", "cycle", "sustain", "perform sustain", 
+    "dismiss", "hop", "recall", "cleave", "dismantle", 
+    "len()", "curse"
+]
+
 # Function to process the input using the lexer and display results
 def process_input():
     text = input_text.get("1.0", "end").strip()  # Get input text
     if not text:
         return
+
+    # Clear previous highlights
+    input_text.tag_remove("purple", "1.0", "end")
+    input_text.tag_remove("comment", "1.0", "end")
     
+    # Highlight keywords from the list
+    for keyword in keywords:
+        start_index = "1.0"
+        while True:
+            # Find the next occurrence of the keyword
+            start_index = input_text.search(keyword, start_index, stopindex="end")
+            if not start_index:
+                break
+            end_index = f"{start_index}+{len(keyword)}c"
+            # Apply the tag to the keyword
+            input_text.tag_add("purple", start_index, end_index)
+            start_index = end_index  # Move to the next character after the keyword
+
+    # Define the tag for magenta color (keyword highlight)
+    input_text.tag_config("purple", foreground="#FF00FF")
+
+    # Highlight single-line comments starting with '#'
+    start_index = "1.0"
+    while True:
+        start_index = input_text.search("#", start_index, stopindex="end")
+        if not start_index:
+            break
+        line_end = input_text.index(f"{start_index} lineend")  # End of the line
+        input_text.tag_add("comment", start_index, line_end)
+        start_index = line_end
+
+    # Highlight multi-line comments starting with '#$' and ending with '$#'
+    start_index = "1.0"
+    while True:
+        start_index = input_text.search("#\\$", start_index, stopindex="end", regexp=True)
+        if not start_index:
+            break
+        end_index = input_text.search("\\$#", start_index, stopindex="end", regexp=True)
+        if not end_index:
+            end_index = input_text.index("end")  # If no closing tag, highlight to the end
+        else:
+            end_index = f"{end_index}+2c"  # Include '$#' in the highlight
+        input_text.tag_add("comment", start_index, end_index)
+        start_index = end_index
+
+    # Define the tag for green color (comment highlight)
+    input_text.tag_config("comment", foreground="#00FF00")
+
     # Run lexer
     tokens, errors = lexer.run('<stdin>', text)
 
@@ -48,6 +105,9 @@ input_label.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 # Input Text widget without scrollbars and no wrapping
 input_text = ctk.CTkTextbox(app, width=600, height=280, font=("Verdana", 14), wrap="none")
 input_text.grid(row=1, column=0, padx=20, pady=0, sticky="n")
+
+# Add support for text tagging (needed for highlighting)
+input_text.configure(state="normal")  # Ensure text is editable
 
 process_button = ctk.CTkButton(app, text="Tokenize Input", command=process_input, width=390)
 process_button.grid(row=2, column=0, padx=10, pady=10, sticky="n")
