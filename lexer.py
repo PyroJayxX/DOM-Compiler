@@ -41,7 +41,7 @@ delim_map = {
     'plus_delim':       set(ALPHA_NUMERIC + '"' + "'" + '-' + '(' + ','),
     'para_delim':       {'(', ' ', '\n'},
     'recall_delim':     set(ALPHA + ' ' + ';'), 
-    'str_delim':        {'+', ')', ']', '\n', ',', ';', ' '},
+    'str_delim':        {'+', ')', ']', '\n', ',', ';', ' ', ':'},
     'woogie_delim':     set(NUMERIC + '(' + ' ')
 }
 
