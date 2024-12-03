@@ -88,7 +88,7 @@ def process_input():
         start_index = end_index  # Move past the highlighted string
 
     # Define the tag for orange color (string highlight)
-    input_text.tag_config("string", foreground="#FFBF00") 
+    input_text.tag_config("string", foreground="#0077dd") 
 
 
     # Run lexer
