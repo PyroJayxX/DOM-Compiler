@@ -68,6 +68,29 @@ def process_input():
     # Define the tag for green color (comment highlight)
     input_text.tag_config("comment", foreground="#999999")
 
+    # Highlight strings
+    start_index = "1.0"
+    while True:
+        # Find the starting double quote
+        start_index = input_text.search(r'"', start_index, stopindex="end", regexp=True)
+        if not start_index:
+            break
+
+        # Find the ending double quote
+        end_index = input_text.search(r'"', f"{start_index}+1c", stopindex="end", regexp=True)
+        if not end_index:
+            end_index = input_text.index("end")  # If no closing quote, highlight to the end
+        else:
+            end_index = f"{end_index}+1c"  # Include the closing double quote in the highlight
+
+        # Apply the tag to the string
+        input_text.tag_add("string", start_index, end_index)
+        start_index = end_index  # Move past the highlighted string
+
+    # Define the tag for orange color (string highlight)
+    input_text.tag_config("string", foreground="#FFBF00") 
+
+
     # Run lexer
     tokens, errors = lexer.run('<stdin>', text)
 
