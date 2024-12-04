@@ -10,13 +10,13 @@ keywords = [
     "domain", "expansion", "null", "int", "float", "string", "bool", 
     "restrict", "invoke", "capture", "true", "false", 
     "vow", "else vow", "else", "boogie", "woogie", 
-    "default", "cycle", "sustain", "perform sustain", 
-    "dismiss", "hop", "recall", "cleave", "dismantle", 
-    "len()", "curse"
+    "default", "cycle", "sustain", "perform", 
+    "dismiss", "hop", "recall", "cleave", 
+    "dismantle", "len()", "curse"
 ]
 
-# Function to process the input using the lexer and display results
-def process_input():
+# Function to process the input (color highlighting only)
+def process_input_color(event=None):
     text = input_text.get("1.0", "end").strip()  # Get input text
     if not text:
         return
@@ -24,7 +24,8 @@ def process_input():
     # Clear previous highlights
     input_text.tag_remove("purple", "1.0", "end")
     input_text.tag_remove("comment", "1.0", "end")
-    
+    input_text.tag_remove("string", "1.0", "end")  # Clear string highlights
+
     # Highlight keywords from the list
     for keyword in keywords:
         start_index = "1.0"
@@ -68,18 +69,24 @@ def process_input():
     # Define the tag for green color (comment highlight)
     input_text.tag_config("comment", foreground="#999999")
 
-    # Highlight strings
+    # Highlight strings, including multi-line strings
     start_index = "1.0"
     while True:
-        # Find the starting double quote
+        # Find the starting double quote for strings
         start_index = input_text.search(r'"', start_index, stopindex="end", regexp=True)
         if not start_index:
             break
 
-        # Find the ending double quote
+        # Check if there is a closing quote on the same line
         end_index = input_text.search(r'"', f"{start_index}+1c", stopindex="end", regexp=True)
+        
         if not end_index:
-            end_index = input_text.index("end")  # If no closing quote, highlight to the end
+            # If there's no closing quote on the same line, find it in subsequent lines
+            # Search for a quote in the next lines
+            end_index = input_text.search(r'"', f"{start_index}+1l", stopindex="end", regexp=True)
+        
+        if not end_index:
+            end_index = input_text.index("end")  # If no closing quote, highlight until the end
         else:
             end_index = f"{end_index}+1c"  # Include the closing double quote in the highlight
 
@@ -88,8 +95,12 @@ def process_input():
         start_index = end_index  # Move past the highlighted string
 
     # Define the tag for orange color (string highlight)
-    input_text.tag_config("string", foreground="#FFBF00") 
+    input_text.tag_config("string", foreground="#0077dd")
 
+def process_input(event=None):
+    text = input_text.get("1.0", "end").strip()  # Get input text
+    if not text:
+        return
 
     # Run lexer
     tokens, errors = lexer.run('<stdin>', text)
@@ -132,6 +143,10 @@ input_text.grid(row=1, column=0, padx=20, pady=0, sticky="n")
 # Add support for text tagging (needed for highlighting)
 input_text.configure(state="normal")  # Ensure text is editable
 
+# Bind the key release event to trigger input processing (for color highlighting only)
+input_text.bind("<KeyRelease>", process_input_color)
+
+# Create Tokenize Input button to process tokens and errors
 process_button = ctk.CTkButton(app, text="Tokenize Input", command=process_input, width=390)
 process_button.grid(row=2, column=0, padx=10, pady=10, sticky="n")
 
