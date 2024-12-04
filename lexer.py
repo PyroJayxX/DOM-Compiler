@@ -32,7 +32,7 @@ delim_map = {
     'clsparen_delim':   {'+', '-', '*', '/', '%', ')', '{', '}', ',', ']', '\n', ' ', ';', ':', '&', '|'},
     'clssquare_delim':  {'+', '-', '*', '/', '%', '!', '=', '<', '>', ')', ',', '[', ']', '\n', ' '},
     'codeblk_delim':    {'{', ' '},
-    'col_delim':        {'\n', '\t', ' '},
+    'col_delim':        set(ALPHA + '\n' + '\t' + ' '),
     'comma_delim':      set(ALPHA_NUMERIC + '"' + "'" + '(' + '[' + '-' + ' '),
     'comp_delim':       set(ALPHA_NUMERIC + '"' + "'" + '(' + '-' + ' '),
     'default_delim':    {' ', ':'},
@@ -40,7 +40,7 @@ delim_map = {
     'ident_delim':      {'+', '-', '*', '/', '%', '!', '=', '<', '>', '(', ')', ',', '[', ']', '\n', ' ', ';', '&', '|'},
     'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' '),
     'kword_delim':      {' ', '\t'},
-    'lend_delim':       set(ALPHA_NUMERIC + '#' + '#$' + '\n' + ' '),
+    'lend_delim':       set(ALPHA_NUMERIC + '#' + '#$' + '\n' + '\t' + ' ' + '}'),
     'minus_delim':      set(ALPHA_NUMERIC + '-' + '(' + ' '),
     'num_delim':        set(ARITH_OP + ' ' + ')' + ',' + ';' + ':'),
     'opnbrace_delim':   set(ALPHA_NUMERIC + '\n' + '"' + ' '),
@@ -263,8 +263,6 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['white_delim']:
                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after space, newline, or tab'"))
-                tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
-
 
             elif self.current_char in NUMERIC:
                 tok, error = self.make_number()     # function for making integer and float tokens
@@ -303,15 +301,18 @@ class Lexer:
                                         self.advance()
                                         if self.current_char not in delim_map['boogie_delim']:
                                             self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                            continue
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                        continue
                             if self.current_char == 'l':
                                 ident_str += self.current_char
                                 ident_count+=1
                                 self.advance()
                                 if self.current_char not in delim_map['kword_delim']:
                                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                    continue
                                 tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
-                                
+                                continue 
                 elif self.current_char == "c":
                     ident_str += self.current_char
                     ident_count+=1
@@ -342,7 +343,9 @@ class Lexer:
                                             self.advance() 
                                             if self.current_char not in delim_map['para_delim']:
                                                 self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                                continue
                                             tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                            continue 
                     if self.current_char == "l":
                         ident_str += self.current_char
                         ident_count+=1
@@ -365,7 +368,9 @@ class Lexer:
                                         self.advance() 
                                         if self.current_char not in delim_map['para_delim']:
                                             self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                            continue
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                        continue
                     if self.current_char == "u":
                         ident_str += self.current_char
                         ident_count+=1
@@ -384,7 +389,9 @@ class Lexer:
                                     self.advance()
                                     if self.current_char not in delim_map['white_delim']:
                                         self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                        continue
                                     tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos)) 
+                                    continue
                     if self.current_char == "y":
                         ident_str += self.current_char
                         ident_count+=1
@@ -403,18 +410,143 @@ class Lexer:
                                     self.advance() 
                                     if self.current_char not in delim_map['para_delim']:
                                         self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                        continue
                                     tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
-                else: 
-                    while self.current_char != None and self.current_char in ALPHA_NUMERIC + '_':
-                        ident_str+=self.current_char
+                                    continue
+                elif self.current_char == "d":
+                    ident_str += self.current_char
+                    ident_count+=1
+                    self.advance() 
+                    if self.current_char == "e":
+                        ident_str += self.current_char
                         ident_count+=1
-                        self.advance()
-                    if self.current_char not in delim_map['ident_delim']:
-                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier '{ident_str}'"))
-                    if ident_count>25:
-                        self.errors.append(LexicalError(pos_start, self.pos, "Identifier exceeded 25 character limit "))
-                    tokens.append(Token(TT_IDENTIFIER, ident_str, pos_start=pos_start, pos_end=self.pos))
-                    
+                        self.advance() 
+                        if self.current_char == "f":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char == "a":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()   
+                                if self.current_char == "u":
+                                    ident_str += self.current_char
+                                    ident_count+=1
+                                    self.advance()  
+                                    if self.current_char == "l":
+                                        ident_str += self.current_char
+                                        ident_count+=1
+                                        self.advance()  
+                                        if self.current_char == "t":
+                                            ident_str += self.current_char
+                                            ident_count+=1
+                                            self.advance()  
+                                            if self.current_char not in delim_map['default_delim']:
+                                                self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                                continue
+                                            tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                            continue
+                    if self.current_char == "i":
+                        ident_str += self.current_char
+                        ident_count+=1
+                        self.advance()  
+                        if self.current_char == "s":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char == "m":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()  
+                                if self.current_char == "a":
+                                    ident_str += self.current_char
+                                    ident_count+=1
+                                    self.advance()  
+                                    if self.current_char == "n":
+                                        ident_str += self.current_char
+                                        ident_count+=1
+                                        self.advance()  
+                                        if self.current_char == "t":
+                                            ident_str += self.current_char
+                                            ident_count+=1
+                                            self.advance()  
+                                            if self.current_char == "l":
+                                                ident_str += self.current_char
+                                                ident_count+=1
+                                                self.advance()  
+                                                if self.current_char == "e":
+                                                    ident_str += self.current_char
+                                                    ident_count+=1
+                                                    self.advance()  
+                                                    if self.current_char not in delim_map['para_delim']:
+                                                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                                        continue
+                                                    tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                                    continue
+                                if self.current_char == "i":
+                                    ident_str += self.current_char
+                                    ident_count+=1
+                                    self.advance()
+                                    if self.current_char == "m":
+                                        ident_str += self.current_char
+                                        ident_count+=1
+                                        self.advance()  
+                                        if self.current_char == "i":
+                                            ident_str += self.current_char
+                                            ident_count+=1
+                                            self.advance()  
+                                            if self.current_char == "s":
+                                                ident_str += self.current_char
+                                                ident_count+=1
+                                                self.advance()  
+                                                if self.current_char == "s":
+                                                    ident_str += self.current_char
+                                                    ident_count+=1
+                                                    self.advance()
+                                                    if self.current_char not in delim_map['ex_delim']:
+                                                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                                        continue
+                                                    tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                                    continue
+                    if self.current_char == "o":
+                        ident_str += self.current_char
+                        ident_count+=1
+                        self.advance()      
+                        if self.current_char == "m":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char == "a":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()  
+                                if self.current_char == "i":
+                                    ident_str += self.current_char
+                                    ident_count+=1
+                                    self.advance()  
+                                    if self.current_char == "n":
+                                        ident_str += self.current_char
+                                        ident_count+=1
+                                        self.advance()  
+                                        if self.current_char not in delim_map['para_delim']:
+                                            self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                            continue
+                                        tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                        continue
+
+                 
+                while self.current_char != None and self.current_char in ALPHA_NUMERIC + '_':
+                    ident_str+=self.current_char
+                    ident_count+=1
+                    self.advance()
+                if self.current_char not in delim_map['ident_delim']:
+                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier '{ident_str}'"))
+                    continue
+                if ident_count>25:
+                    self.errors.append(LexicalError(pos_start, self.pos, "Identifier exceeded 25 character limit "))
+                    continue
+                tokens.append(Token(TT_IDENTIFIER, ident_str, pos_start=pos_start, pos_end=self.pos)) 
+                self.advance()                   
 
             elif self.current_char == '"':
                 tok, error = self.make_string()
@@ -472,8 +604,10 @@ class Lexer:
                     tok_type = TT_DIVEQ
                     if self.current_char not in delim_map['comp_delim']:
                         self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                        continue
                 if self.current_char not in delim_map['assign_delim']:
                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                    continue
                 tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
 
 
@@ -601,28 +735,25 @@ class Lexer:
 
             elif self.current_char == ',':
                 pos_start = self.pos.copy()
-                tokens.append(Token(TT_COMMA, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['comma_delim']:
                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after comma"))
-                    self.advance()
+                tokens.append(Token(TT_COMMA, pos_start=self.pos))
 
 
             elif self.current_char == ';':
                 pos_start = self.pos.copy()
-                tokens.append(Token(TT_SEMICOL, pos_start=self.pos)) # WALA PANG DELIMITER SEMICOL
                 self.advance()
                 if self.current_char not in delim_map['lend_delim']:
                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after semicolon"))
-                    self.advance()
+                tokens.append(Token(TT_SEMICOL, pos_start=self.pos))
 
             elif self.current_char == ':':
                 pos_start = self.pos.copy()
-                tokens.append(Token(TT_COL, pos_start=self.pos))
                 self.advance()
                 if self.current_char not in delim_map['col_delim']:
                     self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after colon"))
-                    self.advance()
+                tokens.append(Token(TT_COL, pos_start=self.pos))
 
 
             elif self.current_char == '&':
