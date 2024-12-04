@@ -533,7 +533,66 @@ class Lexer:
                                             continue
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
                                         continue
-
+            
+                elif self.current_char == "e":
+                    ident_str += self.current_char
+                    ident_count+=1
+                    self.advance()  
+                    if self.current_char == "s":
+                        ident_str += self.current_char
+                        ident_count+=1
+                        self.advance()  
+                        if self.current_char == "l":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char == "e":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()
+                                if self.current_char not in delim_map['codeblk_delim']:
+                                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                    continue
+                                tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                continue
+                                
+                    if self.current_char == "x":
+                        ident_str += self.current_char
+                        ident_count+=1
+                        self.advance()  
+                        if self.current_char == "p":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char == "a":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()  
+                                if self.current_char == "n":
+                                    ident_str += self.current_char
+                                    ident_count+=1
+                                    self.advance()  
+                                    if self.current_char == "s":
+                                        ident_str += self.current_char
+                                        ident_count+=1
+                                        self.advance()  
+                                        if self.current_char == "i":
+                                            ident_str += self.current_char
+                                            ident_count+=1
+                                            self.advance()  
+                                            if self.current_char == "o":
+                                                ident_str += self.current_char
+                                                ident_count+=1
+                                                self.advance()  
+                                                if self.current_char == "n":
+                                                    ident_str += self.current_char
+                                                    ident_count+=1
+                                                    self.advance()  
+                                                    if self.current_char not in delim_map['ex_delim']:
+                                                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                                        continue
+                                                    tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                                                    continue
                  
                 while self.current_char != None and self.current_char in ALPHA_NUMERIC + '_':
                     ident_str+=self.current_char
