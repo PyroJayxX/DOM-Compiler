@@ -25,12 +25,12 @@ ALL_OPERATOR = ARITH_OP + RELATION_OP
 delim_map = {
     'adr_delim':        set(ALPHA_NUMERIC + ' '),
     'arith_delim':      set(ALPHA_NUMERIC + ' ' + '-' + '('),
-    'assign_delim':     set(ALPHA_NUMERIC + ' ' + '"' + '-' + '(' + '[' + '\n'),
+    'assign_delim':     set(ALPHA_NUMERIC + ' ' + '"' + '-' + '(' + ')' + '[' + '\n'),
     'boogie_delim':     {'(', ' ', '\n', '{'},
     'bool_delim':       {')', ']', ',', ' '},
-    'clsbrace_delim':   set(ALPHA_NUMERIC + '}' + '\n' + ' '),
+    'clsbrace_delim':   set(ALPHA_NUMERIC + '}' + '\n' + '\t' + ' ' + ';'),
     'clsparen_delim':   {'+', '-', '*', '/', '%', ')', '{', '}', ',', ']', '\n', ' ', ';', ':', '&', '|'},
-    'clssquare_delim':  {'+', '-', '*', '/', '%', '!', '=', '<', '>', ')', ',', '[', ']', '\n', ' '},
+    'clssquare_delim':  {'+', '-', '*', '/', '%', ' !', '=', '<', '>', ')', ',', '[', ']', '\n', ' ', },
     'codeblk_delim':    {'{', ' '},
     'col_delim':        set(ALPHA + '\n' + '\t' + ' '),
     'comma_delim':      set(ALPHA_NUMERIC + '"' + "'" + '(' + '[' + '-' + ' '),
@@ -38,11 +38,11 @@ delim_map = {
     'default_delim':    {' ', ':'},
     'ex_delim':         {' ', ';', '\n','\t'},
     'ident_delim':      {'+', '-', '*', '/', '%', '!', '=', '<', '>', '(', ')', ',', '[', ']', '\n', ' ', ';', '&', '|'},
-    'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' '),
+    'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' ' + '+' + '-' + ';'),
     'kword_delim':      {' ', '\t'},
     'lend_delim':       set(ALPHA_NUMERIC + '#' + '#$' + '\n' + '\t' + ' ' + '}' + '\0'),
     'minus_delim':      set(ALPHA_NUMERIC + '-' + '(' + ' '),
-    'num_delim':        set(ARITH_OP + ' ' + ')' + ',' + ';' + ':'),
+    'num_delim':        set(ARITH_OP + ' ' + ')' + ',' + ';' + ':' + ']' + '}'),
     'opnbrace_delim':   set(ALPHA_NUMERIC + '\n' + '"' + ' '),
     'opnparen_delim':   set(ALPHA_NUMERIC + '"' + "'" + '-' + '(' + ')' + '\n' + ' '),
     'opnsquare_delim':  set(ALPHA_NUMERIC + '"' + "'" + '-' + '(' + '[' + ']' + ' '),
@@ -688,15 +688,15 @@ class Lexer:
                                             continue
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
                                         continue
-                            if self.current_char == "t":
-                                ident_str += self.current_char
-                                ident_count+=1
-                                self.advance()  
-                                if self.current_char not in delim_map['kword_delim']:
-                                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
-                                    continue
-                                tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                        if self.current_char == "t":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char not in delim_map['kword_delim']:
+                                self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
                                 continue
+                            tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                            continue
                 
                 elif self.current_char == "l":
                     ident_str += self.current_char
@@ -971,7 +971,6 @@ class Lexer:
                     self.errors.append(LexicalError(pos_start, self.pos, "Identifier exceeded 25 character limit "))
                     continue
                 tokens.append(Token(TT_IDENTIFIER, ident_str, pos_start=pos_start, pos_end=self.pos)) 
-                self.advance()                   
 
             elif self.current_char == '"':
                 tok, error = self.make_string()
@@ -986,8 +985,11 @@ class Lexer:
                 if self.current_char == '=':        
                     self.advance()
                     tok_type = TT_PLUSEQ
-                if self.current_char not in delim_map['assign_delim']:
-                    self.error.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                    if self.current_char not in delim_map['assign_delim']:
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                if self.current_char not in delim_map['incdec_delim']:
+                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                
                 tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
 
                 
@@ -998,8 +1000,10 @@ class Lexer:
                 if self.current_char == '=':
                     self.advance()
                     tok_type = TT_MINUSEQ
-                if self.current_char not in delim_map['assign_delim']:
-                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                    if self.current_char not in delim_map['assign_delim']:
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
+                if self.current_char not in delim_map['incdec_delim']:
+                        self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator"))
                 tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
 
 
@@ -1218,7 +1222,7 @@ class Lexer:
                 
 
     def make_number(self): # for making numbers: int and float
-        num_str = ''
+        num_str = '0'
         dot_count = 0
         pos_start = self.pos.copy()
 

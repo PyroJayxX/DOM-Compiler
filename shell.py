@@ -95,7 +95,7 @@ def process_input_color(event=None):
         start_index = end_index  # Move past the highlighted string
 
     # Define the tag for orange color (string highlight)
-    input_text.tag_config("string", foreground="#0077dd")
+    input_text.tag_config("string", foreground="#FFCA4B")
 
 def process_input(event=None):
     text = input_text.get("1.0", "end").strip()  # Get input text
