@@ -41,6 +41,7 @@ delim_map = {
     'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' ' + '+' + '0'),
     'kword_delim':      {' ', '\t'},
     'lend_delim':       set(ALPHA_NUMERIC + '#' + '#$' + '\n' + '\t' + ' ' + '}' + '\0'),
+    'logic_delim':      set(ALPHA + ' '),
     'minus_delim':      set(ALPHA_NUMERIC + '-' + '(' + ' '),
     'num_delim':        set(ARITH_OP + ' ' + ')' + ',' + ';' + ':' + ']' + '}'),
     'opnbrace_delim':   set(ALPHA_NUMERIC + '\n' + '"' + ' '),
@@ -53,33 +54,6 @@ delim_map = {
     'white_delim':      set(ASCII + ALL_OPERATOR + ' ' + '\n' + '\t' + '\0'),
     'woogie_delim':     set(NUMERIC + '(' + ' ')
 }
-
-keyword_delim_map = {
-    'capture':      'para_delim',
-    'cleave':       'para_delim',
-    'cycle':        'para_delim',
-    'domain':       'para_delim',
-    'dismantle':    'para_delim',
-    'vow':          'para_delim',
-    'invoke':       'para_delim',
-    'splice':       'para_delim',
-    'sustain':      'para_delim',
-    'curse':        'kword_delim',
-    'float':        'kword_delim',
-    'int':          'kword_delim',
-    'restrict':     'kword_delim',
-    'string':       'kword_delim',
-    'dismiss':      'ex_delim', 
-    'expansion':    'ex_delim',
-    'hop':          'ex_delim',
-    'null':         'ex_delim',
-    'boogie':       'boogie_delim',
-    'else':         'codeblk_delim',
-    'perform':      'codeblk_delim',
-    'default':      'default_delim', 
-    'recall':       'recall_delim',
-    'woogie':       'woogie_delim'
-    }
 
 first_set_map = {
     'fs_program':           {'expansion', '#', '#$'},
@@ -1084,7 +1058,7 @@ class Lexer:
                     tok_type = TT_NE
 
                 if tok_type == TT_NOT:
-                    if self.current_char not in delim_map['comp_delim']:
+                    if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
                 if tok_type == TT_NE:
                     if self.current_char not in delim_map['assign_delim']:
@@ -1131,7 +1105,7 @@ class Lexer:
                 self.advance()
                 if self.current_char == '&':
                     self.advance()
-                    if self.current_char not in delim_map['assign_delim']:
+                    if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
                     tokens.append(Token(TT_AND, pos_start=self.pos))
                 else: return tokens, InvalidSyntaxError(pos_start, self.pos, "'&' is not a valid operator")
@@ -1142,13 +1116,11 @@ class Lexer:
                 self.advance()
                 if self.current_char == '|':
                     self.advance()
-                    if self.current_char not in delim_map['assign_delim']:
+                    if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
                     tokens.append(Token(TT_OR, pos_start=self.pos))
                 else: return tokens, InvalidSyntaxError(pos_start, self.pos, "'|' is not a valid operator")
     
-
-
 
             elif self.current_char == '(':
                 pos_start = self.pos.copy()
