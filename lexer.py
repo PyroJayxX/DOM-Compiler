@@ -918,7 +918,7 @@ class Lexer:
                 if self.current_char not in delim_map['ident_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier '{ident_str}'")
                 if ident_count>25:
-                    return tokens, LexicalError(pos_start, self.pos, "Identifier exceeded 25 character limit ")
+                    return tokens, LexicalError(pos_start, self.pos, "Identifier exceeded maximum character limit of 25")
                 tokens.append(Token(TT_IDENTIFIER, ident_str, pos_start=pos_start, pos_end=self.pos)) 
 
 
@@ -1219,6 +1219,8 @@ class Lexer:
 
     def make_number(self): # for making numbers: int and float
         num_str = ''
+        num_count = 0
+        dec_count = 0
         dot_count = 0
         pos_start = self.pos.copy()
 
@@ -1234,8 +1236,18 @@ class Lexer:
                 dot_count += 1
                 num_str += '.'
             else:
-                num_str += self.current_char
-                self.advance()
+                if dot_count == 0:
+                    num_count+=1
+                if dot_count == 1:
+                    dec_count+=1
+                if num_count > 17:
+                    pos_end = self.pos.copy()
+                    return [], LexicalError(pos_start, pos_end, "Whole number exceeded maximum character limit of 17")
+                if dot_count == 1 and dec_count > 15:
+                    self.advance()
+                else:
+                    num_str += self.current_char
+                    self.advance()
 
         if self.current_char not in delim_map['num_delim']:
             pos_end = self.pos.copy()
