@@ -110,7 +110,7 @@ def process_input(event=None):
     tokens_output.delete("1.0", "end")  # Clear previous tokens
     if tokens:
         numbered_tokens = [f"{i + 1}:  {token}" for i, token in enumerate(tokens)]  # Add line numbers
-        tokens_output.insert("1.0", '\n'.join(numbered_tokens))
+        tokens_output.insert("1.0", '\n'.join(numbered_tokens)) 
     tokens_output.configure(state="disabled")  # Disable editing after update
 
     # Update error output
@@ -120,6 +120,7 @@ def process_input(event=None):
     error_output.delete("1.0", "end")  # Clear previous errors
     if error:
         error_output.insert("1.0", error.as_string())
+    error_output.configure(state="disabled") # disable editing after update
 
 # Create the main app window
 app = ctk.CTk()

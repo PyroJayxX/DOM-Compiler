@@ -30,7 +30,7 @@ delim_map = {
     'bool_delim':       {')', ']', ',', ' '},
     'clsbrace_delim':   set(ALPHA_NUMERIC + '}' + '\n' + '\t' + ' ' + ';'),
     'clsparen_delim':   {'+', '-', '*', '/', '%', ')', '{', '}', ',', ']', '\n', ' ', ';', ':', '&', '|'},
-    'clssquare_delim':  {'+', '-', '*', '/', '%', ' !', '=', '<', '>', ')', ',', '[', ']', '\n', ' ', },
+    'clssquare_delim':  {'+', '-', '*', '/', '%', ' !', '=', '<', '>', ')', ',', '[', ']', '\n', ' ', ';'},
     'codeblk_delim':    {'{', ' '},
     'col_delim':        set(ALPHA + '\n' + '\t' + ' '),
     'comma_delim':      set(ALPHA_NUMERIC + '"' + "'" + '(' + '[' + '-' + ' '),
@@ -650,15 +650,14 @@ class Lexer:
                                             return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'")
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
                                         continue
-                            if self.current_char == "t":
-                                ident_str += self.current_char
-                                ident_count+=1
-                                self.advance()  
-                                if self.current_char not in delim_map['kword_delim']:
-                                    return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'")
-                                    continue
-                                tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
-                                continue
+                        if self.current_char == "t":
+                            ident_str += self.current_char
+                            ident_count+=1
+                            self.advance()  
+                            if self.current_char not in delim_map['kword_delim']:
+                                return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'")
+                            tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
+                            continue
                 
                 elif self.current_char == "l":
                     ident_str += self.current_char
@@ -980,13 +979,13 @@ class Lexer:
                     self.advance()
                     tok_type = TT_MINUSEQ
 
-                if self.current_tok == TT_MINUS:
+                if tok_type == TT_MINUS:
                     if self.current_char not in delim_map['minus_delim']:
                             return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                if self.current_tok == TT_UNARY:
+                if tok_type == TT_UNARY:
                     if self.current_char not in delim_map['incdec_delim']:
                             return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                if self.current_tok == TT_MINUSEQ:
+                if tok_type == TT_MINUSEQ:
                     if self.current_char not in delim_map['assign_delim']:
                             return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
                 tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
