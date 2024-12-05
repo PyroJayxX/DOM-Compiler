@@ -95,7 +95,7 @@ def process_input_color(event=None):
         start_index = end_index  # Move past the highlighted string
 
     # Define the tag for orange color (string highlight)
-    input_text.tag_config("string", foreground="#0077dd")
+    input_text.tag_config("string", foreground="#FFCA4B")
 
 def process_input(event=None):
     text = input_text.get("1.0", "end").strip()  # Get input text
@@ -103,7 +103,7 @@ def process_input(event=None):
         return
 
     # Run lexer
-    tokens, errors = lexer.run('<stdin>', text)
+    tokens, error = lexer.run('<stdin>', text)
 
     # Update tokens output
     tokens_output.configure(state="normal")  # Enable editing temporarily
@@ -116,9 +116,10 @@ def process_input(event=None):
     # Update error output
     error_output.configure(state="normal")  # Enable editing temporarily
     error_output.delete("1.0", "end")  # Clear previous errors
-    if errors:
-        error_output.insert("1.0", '\n'.join(error.as_string() for error in errors))
-    error_output.configure(state="disabled")  # Disable editing after update
+    # Update error output
+    error_output.delete("1.0", "end")  # Clear previous errors
+    if error:
+        error_output.insert("1.0", error.as_string())
 
 # Create the main app window
 app = ctk.CTk()
