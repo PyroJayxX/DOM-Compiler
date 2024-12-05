@@ -1246,32 +1246,6 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos), None
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos), None
-
-
-    def make_identifier(self): # For making identifiers/keywords
-        id_str = ''
-        pos_start = self.pos.copy()
-
-        while self.current_char != None and self.current_char in ALPHA_NUMERIC + '_':
-            id_str += self.current_char
-            self.advance()
-
-        tok_type = TT_KEYWORD if id_str in keyword_delim_map else TT_IDENTIFIER
-
-        if tok_type == TT_IDENTIFIER:
-             if self.current_char not in delim_map['ident_delim']:
-                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier")
-        elif tok_type == TT_KEYWORD:
-            delim_type = keyword_delim_map[id_str]
-            if isinstance(delim_type, list):  # if it's a list of delimiters from delim map
-                valid_delims = delim_type
-            else:  # if it's not from delim map
-                valid_delims = delim_map.get(delim_type)
-
-            if self.current_char not in valid_delims:
-                return [], LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{id_str}'")
-
-        return Token(tok_type, id_str, pos_start, self.pos), None
     
     def make_string(self): # for making strings
         id_str = ''
