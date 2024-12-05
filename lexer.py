@@ -38,7 +38,7 @@ delim_map = {
     'default_delim':    {' ', ':'},
     'ex_delim':         {' ', ';', '\n','\t'},
     'ident_delim':      {'+', '-', '*', '/', '%', '!', '=', '<', '>', '(', ')', ',', '[', ']', '\n', ' ', ';', '&', '|'},
-    'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' ' + '+' + '-' + ';'),
+    'incdec_delim':     set(ALPHA_NUMERIC + ')' + ' ' + '+' + '0'),
     'kword_delim':      {' ', '\t'},
     'lend_delim':       set(ALPHA_NUMERIC + '#' + '#$' + '\n' + '\t' + ' ' + '}' + '\0'),
     'minus_delim':      set(ALPHA_NUMERIC + '-' + '(' + ' '),
@@ -248,7 +248,6 @@ class Lexer:
         self.text = text
         self.pos = Position(-1, 0, -1, fn, text)
         self.current_char = None
-        self.errors = []
         self.advance()
 
     def advance(self):
@@ -688,15 +687,15 @@ class Lexer:
                                             continue
                                         tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
                                         continue
-                        if self.current_char == "t":
-                            ident_str += self.current_char
-                            ident_count+=1
-                            self.advance()  
-                            if self.current_char not in delim_map['kword_delim']:
-                                self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                            if self.current_char == "t":
+                                ident_str += self.current_char
+                                ident_count+=1
+                                self.advance()  
+                                if self.current_char not in delim_map['kword_delim']:
+                                    self.errors.append(LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after keyword '{ident_str}'"))
+                                    continue
+                                tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
                                 continue
-                            tokens.append(Token(TT_KEYWORD, ident_str, pos_start=pos_start, pos_end=self.pos))
-                            continue
                 
                 elif self.current_char == "l":
                     ident_str += self.current_char
@@ -1222,7 +1221,7 @@ class Lexer:
                 
 
     def make_number(self): # for making numbers: int and float
-        num_str = '0'
+        num_str = ''
         dot_count = 0
         pos_start = self.pos.copy()
 
@@ -1301,6 +1300,4 @@ def run(fn, text):
         # Generate tokens
         lexer = Lexer(fn, text)
         tokens, error = lexer.make_tokens()
-        if error: return None, error
-
         return tokens, error
