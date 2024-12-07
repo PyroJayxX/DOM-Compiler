@@ -4,8 +4,8 @@
 from string_with_arrows import *
 import string
 
-##############
-# CONSTANTS
+############## 
+# CONSTANTS - From the Regular definition from docu. 
 ##############
 UPPER_LETTERS = string.ascii_uppercase
 LOWER_LETTERS = string.ascii_lowercase
@@ -21,7 +21,7 @@ RELATION_OP = '<>!&|'
 ALL_OPERATOR = ARITH_OP + RELATION_OP
 
 
-
+# FROM THE DELIMITERS 
 delim_map = {
     'adr_delim':        set(ALPHA_NUMERIC + ' '),
     'arith_delim':      set(ALPHA_NUMERIC + ' ' + '-' + '('),
@@ -239,12 +239,6 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['white_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after space, newline, or tab'")
-
-            elif self.current_char in NUMERIC:
-                tok, error = self.make_number()     # function for making integer and float tokens
-                if error: return tokens, error
-                tokens.append(tok)
-
 
             elif self.current_char in ALPHA:
                 ident_str = ''
@@ -959,36 +953,57 @@ class Lexer:
                 if tok_type == TT_PLUS:
                     if self.current_char not in delim_map['plus_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
                 if tok_type == TT_UNARY:
                     if self.current_char not in delim_map['incdec_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '++', pos_start=pos_start, pos_end=self.pos))
                 if tok_type == TT_PLUSEQ:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+        
                 
 
-            elif self.current_char == '-':
-                tok_type = TT_MINUS
+            elif self.current_char == '-': 
                 pos_start = self.pos.copy()
                 self.advance()
+
+                # Check if this is a decrement operator (--), assignment operator (-=), or standalone '-'
                 if self.current_char == '-':
                     self.advance()
-                    tok_type = TT_UNARY
-                if self.current_char == '=':
-                    self.advance()
-                    tok_type = TT_MINUSEQ
-
-                if tok_type == TT_MINUS:
-                    if self.current_char not in delim_map['minus_delim']:
-                            return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                if tok_type == TT_UNARY:
+                    tok_type = TT_UNARY  # Decrement (-- operator)
                     if self.current_char not in delim_map['incdec_delim']:
-                            return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                if tok_type == TT_MINUSEQ:
+                        return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '--', pos_start=pos_start, pos_end=self.pos))
+
+                elif self.current_char == '=':
+                    self.advance()
+                    tok_type = TT_MINUSEQ  # -= operator
                     if self.current_char not in delim_map['assign_delim']:
-                            return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                        return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    
+                else:
+                    # Determine if this is unary or binary minus
+                    if len(tokens) > 0 and tokens[-1].type in [TT_INT, TT_FLOAT, TT_IDENTIFIER, TT_RPAREN]:
+                        # If the last token is a number, identifier, or closing parenthesis, treat as binary minus
+                        tokens.append(Token(TT_MINUS, pos_start=pos_start, pos_end=self.pos))
+                    else:
+                        # Otherwise, treat as unary minus
+                        if self.current_char in NUMERIC:
+                            # Make a negative number token
+                            tok, error = self.make_number(is_negative=True)
+                            if error: return tokens, error
+                            tokens.append(tok)
+                        else:
+                            return tokens, LexicalError(pos_start, self.pos, f"Unexpected '-' without a valid number or identifier.")
+
+            
+            elif self.current_char in NUMERIC:
+                tok, error = self.make_number()     # function for making integer and float tokens
+                if error: return tokens, error
+                tokens.append(tok)
 
         
             elif self.current_char == '*':
@@ -1217,12 +1232,15 @@ class Lexer:
         return tokens, None
                 
 
-    def make_number(self): # for making numbers: int and float
+    def make_number(self, is_negative=False):  # for making numbers: int and float
         num_str = ''
         num_count = 0
         dec_count = 0
         dot_count = 0
         pos_start = self.pos.copy()
+
+        if is_negative:  # Prepend '-' to handle negative numbers
+            num_str = '-'
 
         while self.current_char != None and self.current_char in NUMERIC + '.':
             if self.current_char == '.':
@@ -1237,13 +1255,13 @@ class Lexer:
                 num_str += '.'
             else:
                 if dot_count == 0:
-                    num_count+=1
+                    num_count += 1
                 if dot_count == 1:
-                    dec_count+=1
-                if num_count > 17:
+                    dec_count += 1
+                if num_count > 9:
                     pos_end = self.pos.copy()
                     return [], LexicalError(pos_start, pos_end, "Whole number exceeded maximum character limit of 17")
-                if dot_count == 1 and dec_count > 15:
+                if dot_count == 1 and dec_count > 7:
                     self.advance()
                 else:
                     num_str += self.current_char
@@ -1257,27 +1275,7 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos), None
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos), None
-    
-    def make_string(self): # for making strings
-        id_str = ''
-        pos_start = self.pos.copy() 
-        self.advance()
 
-        while self.current_char != None and self.current_char in ASCII:
-            if self.current_char == '"':
-                # Closing quote found, break out of the loop
-                self.advance() 
-                if self.current_char not in delim_map['str_delim']:
-                    pos_end = self.pos.copy()  
-                    return [], LexicalError(pos_start, pos_end, f"Invalid delimiter '{self.current_char}' after string '{id_str}'")
-                else:
-                    return Token(TT_STRING, id_str, pos_start, self.pos), None
-            
-            id_str += self.current_char
-            self.advance()
-
-        pos_end = self.pos.copy()
-        return [], InvalidSyntaxError(pos_start, pos_end, 'String not properly closed with double quotes (")')
     
 def run(fn, text):
         # Generate tokens
