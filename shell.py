@@ -124,7 +124,7 @@ def process_input(event=None):
 
 # Create the main app window
 app = ctk.CTk()
-app.title("DOM Compiler")
+app.title("DOM Lexer")
 app.geometry("700x545")  # Adjust width to fit the tokens area comfortably
 app.resizable(False, False)
 
