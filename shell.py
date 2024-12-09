@@ -119,10 +119,14 @@ def process_input(event=None):
     lexeme_output.configure(state="disabled")  # disable editing after update
 
     # update error output
-    error_output.configure(state="normal")  # enable editing temporarily
+    error_output.configure(state="normal")  # enable editing temporarily    
     error_output.delete("1.0", "end")  # clear previous errors
     if error:
-        error_output.insert("1.0", error.as_string())
+        if isinstance(error, list):  # check if it's a list of errors
+            error_messages = "\n".join(f"{idx + 1}. {e.as_string()}" for idx, e in enumerate(error))  # Add numbering
+            error_output.insert("1.0", error_messages)
+        else:
+            error_output.insert("1.0", error.as_string())  # single error case
     error_output.configure(state="disabled")  # disable editing after update
 
 
