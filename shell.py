@@ -105,30 +105,35 @@ def process_input(event=None):
     # Run lexer
     tokens, error = lexer.run('<stdin>', text)
 
-    # Update tokens output
+    # Update tokens output (token types)
     tokens_output.configure(state="normal")  # Enable editing temporarily
     tokens_output.delete("1.0", "end")  # Clear previous tokens
     if tokens:
-        numbered_tokens = [f"{i + 1}:  {token}" for i, token in enumerate(tokens)]  # Add line numbers
-        tokens_output.insert("1.0", '\n'.join(numbered_tokens)) 
+        token_types = [f"{i + 1}:  {token.type}" for i, token in enumerate(tokens)]  # Add line numbers
+        tokens_output.insert("1.0", '\n'.join(token_types))
     tokens_output.configure(state="disabled")  # Disable editing after update
+
+    # Update lexeme output
+    lexeme_output.configure(state="normal")  # Enable editing temporarily
+    lexeme_output.delete("1.0", "end")  # Clear previous lexemes
+    if tokens:
+        lexemes = [f"{i + 1}:  {token.value}" for i, token in enumerate(tokens)]  # Add line numbers
+        lexeme_output.insert("1.0", '\n'.join(lexemes))
+    lexeme_output.configure(state="disabled")  # Disable editing after update
 
     # Update error output
     error_output.configure(state="normal")  # Enable editing temporarily
     error_output.delete("1.0", "end")  # Clear previous errors
-    # Update error output
-    error_output.delete("1.0", "end")  # Clear previous errors
     if error:
         error_output.insert("1.0", error.as_string())
-    error_output.configure(state="disabled") # disable editing after update
+    error_output.configure(state="disabled")  # Disable editing after update
 
-# Create the main app window
+
 app = ctk.CTk()
 app.title("DOM Lexer")
-app.geometry("700x545")  # Adjust width to fit the tokens area comfortably
+app.geometry("840x545")  # Adjust width to fit the tokens area comfortably
 app.resizable(False, False)
 
-# Change the window icon
 try:
     app.iconbitmap("dom_logo.ico")  # Replace with your .ico file path
 except Exception as e:
@@ -138,39 +143,41 @@ except Exception as e:
 input_label = ctk.CTkLabel(app, text="Input Code:", font=("Arial", 16))
 input_label.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-# Input Text widget without scrollbars and no wrapping
-input_text = ctk.CTkTextbox(app, width=600, height=280, font=("Verdana", 14), wrap="none")
+input_text = ctk.CTkTextbox(app, width=500, height=280, font=("Verdana", 14), wrap="none")
 input_text.grid(row=1, column=0, padx=20, pady=0, sticky="n")
 
-# Add support for text tagging (needed for highlighting)
-input_text.configure(state="normal")  # Ensure text is editable
-
-# Bind the key release event to trigger input processing (for color highlighting only)
+input_text.configure(state="normal") 
 input_text.bind("<KeyRelease>", process_input_color)
 
 # Create Tokenize Input button to process tokens and errors
 process_button = ctk.CTkButton(app, text="Tokenize Input", command=process_input, width=390)
-process_button.grid(row=2, column=0, padx=10, pady=10, sticky="n")
-
-# Tokens section (right-side rectangle)
-tokens_label = ctk.CTkLabel(app, text="Tokens:", font=("Arial", 16))
-tokens_label.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-
-tokens_output = ctk.CTkTextbox(app, width=230, height=485, font=("Verdana", 14), state="disabled", wrap="none")  # Set to disabled initially
-tokens_output.grid(row=1, rowspan=5, column=1, padx=20, pady=0, sticky="n")
+process_button.grid(row=2, column=0, padx=20, pady=10, sticky="n")
 
 # Error section (below input text)
 error_label = ctk.CTkLabel(app, text="Errors:", font=("Arial", 16))
-error_label.grid(row=3, column=0, padx=5, pady=5, sticky="n")
+error_label.grid(row=3, column=0, padx=20, pady=5, sticky="n")
 
 # Error textbox without scrollbars and no wrapping
-error_output = ctk.CTkTextbox(app, width=600, height=119, font=("Consolas", 14), state="disabled", wrap="none")  # Set to disabled initially
+error_output = ctk.CTkTextbox(app, width=500, height=119, font=("Consolas", 14), state="disabled", wrap="none")
 error_output.grid(row=4, column=0, padx=20, pady=0, sticky="s")
 
-# Column and row configurations
+# Tokens section (right-side rectangle)
+tokens_label = ctk.CTkLabel(app, text="Token Type:", font=("Arial", 16))
+tokens_label.grid(row=0, column=1, padx=0, pady=5, sticky="ew")
+
+tokens_output = ctk.CTkTextbox(app, width=170, height=485, font=("Verdana", 14), state="disabled", wrap="none")
+tokens_output.grid(row=1, rowspan=5, column=1, padx=20, pady=0, sticky="n")
+
+# Tokens section (right-side rectangle)
+lexeme_label = ctk.CTkLabel(app, text="Lexemes:", font=("Arial", 16))
+lexeme_label.grid(row=0, column=2, padx=20, pady=5, sticky="ew")
+
+lexeme_output = ctk.CTkTextbox(app, width=170, height=485, font=("Verdana", 14), state="disabled", wrap="none")  
+lexeme_output.grid(row=1, rowspan=5, column=2, padx=20, pady=0, sticky="n")
+
 app.grid_columnconfigure(0, weight=1)  # Input column
 app.grid_columnconfigure(1, weight=0)  # Tokens column
-app.grid_rowconfigure(1, weight=0)  # Ensure proper expansion
+app.grid_columnconfigure(2, weight=0)  # Lexeme column
+app.grid_rowconfigure(1, weight=0) 
 
-# Start the application
 app.mainloop()

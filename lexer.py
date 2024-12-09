@@ -216,7 +216,7 @@ class Token:
         return self.type == type_ and self.value == value
 
     def __repr__(self):
-        if self.value: return f'{self.type}:{self.value}'
+        if self.value: return f'{self.type}: {self.value}'
         return f'{self.type}'
         
 class Lexer:
@@ -242,6 +242,13 @@ class Lexer:
                 if self.current_char not in delim_map['white_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after space, newline, or tab'")
 
+
+            elif self.current_char in NUMERIC:
+                tok, error = self.make_number()     # function for making integer and float tokens
+                if error: return tokens, error
+                tokens.append(tok)
+
+            
             elif self.current_char in ALPHA:
                 ident_str = ''
                 ident_count = 0
@@ -1015,10 +1022,11 @@ class Lexer:
                 if tok_type == TT_ASSIGN:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '=', pos_start=self.pos))
                 if tok_type == TT_EQ:
                     if self.current_char not in delim_map['comp_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '==', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '+':
@@ -1035,7 +1043,7 @@ class Lexer:
                 if tok_type == TT_PLUS:
                     if self.current_char not in delim_map['plus_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '+', pos_start=pos_start, pos_end=self.pos))
                 if tok_type == TT_UNARY:
                     if self.current_char not in delim_map['incdec_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
@@ -1043,8 +1051,7 @@ class Lexer:
                 if tok_type == TT_PLUSEQ:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
-        
+                    tokens.append(Token(tok_type, '+=', pos_start=pos_start, pos_end=self.pos))
                 
 
             elif self.current_char == '-': 
@@ -1053,7 +1060,7 @@ class Lexer:
 
                 if self.current_char == '-':
                     self.advance()
-                    tok_type = TT_UNARY  # Decrement (-- operator)
+                    tok_type = TT_UNARY  #  -- operator
                     if self.current_char not in delim_map['incdec_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
                     tokens.append(Token(tok_type, '--', pos_start=pos_start, pos_end=self.pos))
@@ -1063,11 +1070,11 @@ class Lexer:
                     tok_type = TT_MINUSEQ  # -= operator
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                    tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '-=', pos_start=pos_start, pos_end=self.pos))
                     
                 else:
                     if len(tokens) > 0 and tokens[-1].type in [TT_INT, TT_FLOAT, TT_IDENTIFIER, TT_RPAREN]:
-                        tokens.append(Token(TT_MINUS, pos_start=pos_start, pos_end=self.pos))
+                        tokens.append(Token(TT_MINUS, '-', pos_start=pos_start, pos_end=self.pos))
                     else:
                         if self.current_char in NUMERIC: 
                             tok, error = self.make_number(is_negative=True)
@@ -1075,12 +1082,6 @@ class Lexer:
                             tokens.append(tok)
                         else:
                             return tokens, LexicalError(pos_start, self.pos, f"Unexpected '-' without a valid number or identifier.")
-
-            
-            elif self.current_char in NUMERIC:
-                tok, error = self.make_number()     # function for making integer and float tokens
-                if error: return tokens, error
-                tokens.append(tok)
 
         
             elif self.current_char == '*':
@@ -1097,13 +1098,15 @@ class Lexer:
                 if tok_type == TT_MUL:
                     if self.current_char not in delim_map['arith_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '*', pos_start=self.pos))
                 if tok_type == TT_POW:
                     if self.current_char not in delim_map['arith_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '**', pos_start=pos_start, pos_end=self.pos))
                 if tok_type == TT_MULEQ:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")   
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '*=', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '/':
@@ -1117,10 +1120,11 @@ class Lexer:
                 if tok_type == TT_DIV:
                     if self.current_char not in delim_map['arith_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '/', pos_start=self.pos))
                 if tok_type == TT_DIVEQ:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '/=', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '%':
@@ -1134,10 +1138,11 @@ class Lexer:
                 if tok_type == TT_DIV:
                     if self.current_char not in delim_map['arith_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '%', pos_start=self.pos))
                 if tok_type == TT_MODEQ:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '%=', pos_start=pos_start, pos_end=self.pos))
             
 
             elif self.current_char == '!':
@@ -1151,10 +1156,11 @@ class Lexer:
                 if tok_type == TT_NOT:
                     if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '!', pos_start=self.pos))
                 if tok_type == TT_NE:
                     if self.current_char not in delim_map['assign_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '!=', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '<':
@@ -1168,10 +1174,11 @@ class Lexer:
                 if tok_type == TT_LT:
                     if self.current_char not in delim_map['comp_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '<', pos_start=self.pos))
                 if tok_type == TT_LTE:
                     if self.current_char not in delim_map['comp_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '<=', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '>':
@@ -1185,10 +1192,11 @@ class Lexer:
                 if tok_type == TT_GT:
                     if self.current_char not in delim_map['comp_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
+                    tokens.append(Token(tok_type, '>', pos_start=self.pos))
                 if tok_type == TT_GTE:
                     if self.current_char not in delim_map['comp_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                tokens.append(Token(tok_type, pos_start=pos_start, pos_end=self.pos))
+                    tokens.append(Token(tok_type, '>=', pos_start=pos_start, pos_end=self.pos))
 
 
             elif self.current_char == '&':
@@ -1198,7 +1206,7 @@ class Lexer:
                     self.advance()
                     if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                    tokens.append(Token(TT_AND, pos_start=self.pos))
+                    tokens.append(Token(TT_AND, '&&', pos_start=pos_start, pos_end=self.pos))
                 else: return tokens, InvalidSyntaxError(pos_start, self.pos, "'&' is not a valid operator")
 
 
@@ -1209,7 +1217,7 @@ class Lexer:
                     self.advance()
                     if self.current_char not in delim_map['logic_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after operator")
-                    tokens.append(Token(TT_OR, pos_start=self.pos))
+                    tokens.append(Token(TT_OR, '||', pos_start=pos_start, pos_end=self.pos))
                 else: return tokens, InvalidSyntaxError(pos_start, self.pos, "'|' is not a valid operator")
     
 
@@ -1218,7 +1226,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['opnparen_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses")
-                tokens.append(Token(TT_LPAREN, pos_start=self.pos))
+                tokens.append(Token(TT_LPAREN, '(', pos_start=self.pos))
 
 
             elif self.current_char == ')':
@@ -1226,7 +1234,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['clsparen_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after parentheses")
-                tokens.append(Token(TT_RPAREN, pos_start=self.pos))
+                tokens.append(Token(TT_RPAREN, ')', pos_start=self.pos))
 
 
             elif self.current_char == '[':
@@ -1234,7 +1242,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['opnsquare_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets")
-                tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
+                tokens.append(Token(TT_LSQUARE, '[', pos_start=self.pos))
 
 
             elif self.current_char == ']':
@@ -1242,7 +1250,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['clssquare_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after brackets")
-                tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
+                tokens.append(Token(TT_RSQUARE, ']', pos_start=self.pos))
 
 
             elif self.current_char == '{':
@@ -1250,7 +1258,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['opnbrace_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces")
-                tokens.append(Token(TT_LBRACE, pos_start=self.pos))
+                tokens.append(Token(TT_LBRACE, '{', pos_start=self.pos))
 
 
             elif self.current_char == '}':
@@ -1258,7 +1266,7 @@ class Lexer:
                 self.advance()
                 if self.current_char != None and self.current_char not in delim_map['clsbrace_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after braces")
-                tokens.append(Token(TT_RBRACE, pos_start=self.pos))
+                tokens.append(Token(TT_RBRACE, '}', pos_start=self.pos))
 
 
             elif self.current_char == ',':
@@ -1266,7 +1274,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['comma_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after comma")
-                tokens.append(Token(TT_COMMA, pos_start=self.pos))
+                tokens.append(Token(TT_COMMA, ',', pos_start=self.pos))
 
 
             elif self.current_char == ':':
@@ -1274,7 +1282,7 @@ class Lexer:
                 self.advance()
                 if self.current_char not in delim_map['col_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after colon")
-                tokens.append(Token(TT_COL, pos_start=self.pos))
+                tokens.append(Token(TT_COL, ':', pos_start=self.pos))
 
 
             elif self.current_char == ';':
@@ -1282,7 +1290,7 @@ class Lexer:
                 self.advance()
                 if self.current_char != None and self.current_char not in delim_map['lend_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after semicolon")
-                tokens.append(Token(TT_SEMICOL, pos_start=self.pos))
+                tokens.append(Token(TT_SEMICOL, ';', pos_start=self.pos))
 
 
             elif self.current_char == '#':
