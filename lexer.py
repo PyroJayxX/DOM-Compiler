@@ -1272,7 +1272,7 @@ class Lexer:
                     if self.current_char not in delim_map['white_delim']:
                         return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after space")
                     else:
-                        tokens.append(Token(TT_SPACE, "' '", pos_start=pos_start, pos_end=self.pos))
+                        tokens.append(Token(TT_SPACE, '␣', pos_start=pos_start, pos_end=self.pos))
                         continue
                 # check for tab
                 if self.current_char == '\t':
