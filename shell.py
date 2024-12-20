@@ -12,13 +12,13 @@ app.option_add("*tearOff", False)  # This is always a good idea
 # Apply the ttk theme
 style = ttk.Style()
 try:
-    app.tk.call("source", "forest-dark.tcl")  # Ensure forest-dark.tcl is in the same directory
+    app.tk.call("source", "./Dependencies/forest-dark.tcl")  # Ensure forest-dark.tcl is in the same directory
     style.theme_use("forest-dark")
 except Exception as e:
     print(f"Error loading Forest theme: {e}")
 
 try:
-    app.iconbitmap("dom_logo.ico")
+    app.iconbitmap("./Dependencies/dom_logo.ico")
 except Exception as e:
     print(f"Could not set icon: {e}")
 
