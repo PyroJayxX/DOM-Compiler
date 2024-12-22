@@ -2,14 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 import lexer
 
-# Initialize the main window
 app = tk.Tk()
 app.title("DOM Lexer")
 app.geometry("1000x630")
 app.resizable(False, False)
 app.option_add("*tearOff", False)  # This is always a good idea
 
-# Apply the ttk theme
 style = ttk.Style()
 try:
     app.tk.call("source", "./Dependencies/forest-dark.tcl")  # Ensure forest-dark.tcl is in the same directory
@@ -22,7 +20,6 @@ try:
 except Exception as e:
     print(f"Could not set icon: {e}")
 
-# Keywords for syntax highlighting
 keywords = [
     "domain", "expansion", "null", "int", "float", "string", "bool",
     "restrict", "invoke", "capture", "true", "false",
@@ -32,7 +29,6 @@ keywords = [
     "dismantle", "len", "curse"
 ]
 
-# Function to apply syntax highlighting
 def apply_syntax_highlighting(event=None):
     text = input_text.get("1.0", "end").strip()
     if not text:
@@ -80,7 +76,6 @@ def apply_syntax_highlighting(event=None):
 
     input_text.tag_config("string", foreground="#FFCA4B")
 
-# Function to process input and display tokens and errors
 def process_input():
     text = input_text.get("1.0", "end").strip()
     if not text:
@@ -129,15 +124,11 @@ for col in columns:
     table.heading(col, text=col, anchor="center")
     table.column(col, anchor="center", width=120)
 
-# Add Scrollbars
 v_scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
 v_scrollbar.pack(side="right", fill="y")
-
 table.configure(yscrollcommand=v_scrollbar.set)
-
 table.pack(fill="both", expand=True)
 
-# Grid Configuration
 app.grid_columnconfigure(0, weight=1)
 app.grid_columnconfigure(1, weight=0)
 app.grid_rowconfigure(1, weight=0)
