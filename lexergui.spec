@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['shell.py'],
+    ['lexergui.py'],
     pathex=[],
     binaries=[],
     datas=[('dom_logo.ico', '.'), ('forest-dark.tcl', '.'), ('forest-dark', 'forest-dark')],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='shell',
+    name='lexergui',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

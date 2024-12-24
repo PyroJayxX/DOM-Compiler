@@ -19,6 +19,14 @@ ARITH_OP = '+-*/%='
 RELATION_OP = '<>!&|'
 ALL_OPERATOR = ARITH_OP + RELATION_OP
 
+keywords = [
+    "domain", "expansion", "null", "int", "float", "string", "bool",
+    "restrict", "invoke", "capture", "true", "false",
+    "vow", "else vow", "else", "boogie", "woogie",
+    "default", "cycle", "sustain", "perform",
+    "dismiss", "hop", "recall", "cleave",
+    "dismantle", "len", "curse"
+]
 
 # FROM THE DELIMITERS 
 delim_map = {
@@ -1100,6 +1108,9 @@ class Lexer:
                     ident_count+=1
                     ident_state+=1
                     self.advance()
+                ident_lower = ident_str.lower()
+                if ident_lower in keywords:
+                    return tokens, LexicalError(pos_start, self.pos, f"Keyword '{ident_str}' cannot be used as identifier regardless of letter-casing")
                 if self.current_char not in delim_map['ident_delim']:
                     return tokens, LexicalError(pos_start, self.pos, f"Invalid delimiter '{self.current_char}' after identifier '{ident_str}'")
                 if ident_count>25:
