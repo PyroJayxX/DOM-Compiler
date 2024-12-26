@@ -23,7 +23,7 @@ except Exception as e:
 keywords = [
     "domain", "expansion", "null", "int", "float", "string", "bool",
     "restrict", "invoke", "capture", "true", "false",
-    "vow", "else vow", "else", "boogie", "woogie",
+    "vow", "else", "boogie", "woogie",
     "default", "cycle", "sustain", "perform",
     "dismiss", "hop", "recall", "cleave",
     "dismantle", "len", "curse"
